@@ -37,17 +37,25 @@ pipeline {
         }
 
         stage('Dependency Security Scan') {
-            agent {
-                docker {
-                    image 'node:16-bullseye'
-                    reuseNode true
-                }
-            }
-
-            steps {
-                sh 'npm audit --audit-level=high'
-            }
+    agent {
+        docker {
+            image 'node:16-bullseye'
+            reuseNode true
         }
+    }
+
+    steps {
+        sh 'npm audit --audit-level=high --json > npm-audit.json'
+    }
+
+    post {
+        always {
+            archiveArtifacts artifacts: 'npm-audit.json',
+                             fingerprint: true,
+                             allowEmptyArchive: true
+        }
+    }
+}
 
         stage('Build Docker Image') {
             agent any
